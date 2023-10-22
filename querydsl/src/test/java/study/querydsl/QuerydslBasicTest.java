@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import study.querydsl.dto.MemberDto;
+import study.querydsl.dto.QMemberDto;
 import study.querydsl.dto.UserDto;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.QMember;
@@ -126,6 +127,11 @@ public class QuerydslBasicTest {
         assertThat(teamA.get(member.age.avg())).isEqualTo(15);
     }
 
+    /**
+     * 단일결과 조회는 자료형이 정해져있지만 다중결과값은 자료형이 다양하기 때문에 querydsl의 tuple 타입으로 반환된다.
+     *  tuple타입은 리파지토리까지만 사용하는걸 권장하기 때문에 서비스에서는 Dto로 적재하는게 좋다.
+     *
+     */
     @Test
     public void simpleProjection() {
         //GIVEN
@@ -174,6 +180,7 @@ public class QuerydslBasicTest {
         }
     }
 
+    //DTO Field에 아예 값을 때려박는 방식
     @Test
     public void findDtoByField() {
         //GIVEN
@@ -229,6 +236,27 @@ public class QuerydslBasicTest {
         //THEN
         for (UserDto userDto : result){
             System.out.println("UserDto = "+userDto);
+        }
+    }
+
+    /**
+     * dto를 q파일로 생성해서 호출하는 방식이다.
+     * constructor와 비슷한 방식이나, constructor은 컴파일 오류가 나지 않아서 RuntimeException이 나올때 까지
+     * 오류사항을 확인 못할수도 있다.
+     * 해당방법이 좋긴하나 단점은 Dto에서 querydsl을 의존하는게 단점이다.
+     */
+    @Test
+    public void findDtoByQueryProjection() {
+        //GIVEN
+        List<MemberDto> result = queryFactory
+                .select(new QMemberDto(member.username, member.age))
+                .from(member)
+                .fetch();
+        //WHEN
+
+        //THEN
+        for (MemberDto memberDto : result){
+            System.out.println("memberDto = "+memberDto);
         }
     }
 
